@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive Global Operations Dashboard with 3D Map">
+    <title>Global Operations Dashboard - Bilingual</title>
+    
+    <script src="//unpkg.com/three"></script>
+    <script src="//unpkg.com/globe.gl"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="globe-container"></div>
+
+    <main class="dashboard-wrapper">
+        <div class="controls-container">
+            <div class="glass-panel header-title">
+                <svg viewBox="0 0 24 24" style="color: var(--accent); width: 24px; height: 24px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                <span data-i18n="title">العمليات العالمية</span>
+            </div>
+            <div class="glass-panel action-buttons">
+                <button id="btn-lang" class="btn-icon" title="Language" style="font-weight: bold; font-size: 0.9rem;">EN</button>
+                <button id="btn-rotate" class="btn-icon" title="Toggle Rotation"><svg viewBox="0 0 24 24"><path d="M12 2.75a9.25 9.25 0 1 0 4.737 17.197l-1.35-1.917A6.985 6.985 0 1 1 18.95 12h-2.203l3.352 4.757L23.45 12h-2.201a9.215 9.215 0 0 0-9.249-9.25z"/></svg></button>
+                <button id="btn-theme" class="btn-icon" title="Day / Night"><svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0-13a1 1 0 0 0-1 1v2a1 1 0 1 0 2 0V3a1 1 0 0 0-1-1zm0 18a1 1 0 0 0-1 1v2a1 1 0 1 0 2 0v-2a1 1 0 0 0-1-1zm8-10h2a1 1 0 1 0 0-2h-2a1 1 0 1 0 0 2zM3 11H1a1 1 0 1 0 0 2h2a1 1 0 1 0 0-2zm14.66-5.24l1.41-1.42a1 1 0 0 0-1.41-1.41l-1.42 1.41a1 1 0 0 0 1.42 1.42zM5.34 18.66l-1.41 1.42a1 1 0 1 0 1.41 1.41l1.42-1.41a1 1 0 0 0-1.42-1.42zm14.73 0a1 1 0 0 0-1.41 0l-1.42 1.41a1 1 0 1 0 1.42 1.42l1.41-1.42a1 1 0 0 0 0-1.41zM6.76 6.76a1 1 0 0 0 0-1.41L5.34 3.93A1 1 0 1 0 3.93 5.34l1.42 1.42a1 1 0 0 0 1.41 0z"/></svg></button>
+            </div>
+        </div>
+
+        <aside id="country-info-panel" class="glass-panel info-panel">
+            <div class="panel-header">
+                <button onclick="closePanel()" class="close-btn" title="Close (ESC)"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+                <div class="country-title">
+                    <h2 id="c-name" data-i18n="selectCountry">الاسم</h2>
+                    <p id="c-nickname" data-i18n="nickname">اللقب</p>
+                </div>
+            </div>
+
+            <div id="loading-state" class="state-container hidden">
+                <div class="loader"></div><p data-i18n="loading">جلب البيانات المباشرة...</p>
+            </div>
+            
+            <div id="error-state" class="state-container hidden">
+                <svg viewBox="0 0 24 24" style="fill: #ef4444; width: 40px; height: 40px; margin-bottom: 10px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                <p data-i18n="error">عذراً، البيانات غير متوفرة لهذه المنطقة.</p>
+            </div>
+
+            <div id="data-state" class="panel-content hidden">
+                <div class="media-row">
+                    <img id="c-flag" src="" alt="Flag">
+                    <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+                        <span data-i18n="time">الوقت الآن</span><br><span id="c-time" class="highlight-text" style="font-size: 1.2rem;" dir="ltr">--:--</span>
+                    </div>
+                    <img id="c-emblem" src="" alt="Emblem">
+                </div>
+
+                <div class="data-section">
+                    <h3><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> <span data-i18n="geo">جغرافيا وسكان</span></h3>
+                    <div class="grid-data">
+                        <div class="data-item"><span class="data-label" data-i18n="capital">العاصمة</span><span class="data-value" id="c-capital">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="region">الإقليم</span><span class="data-value" id="c-region" style="font-size: 0.8rem;">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="pop">التعداد السكاني</span><span class="data-value" id="c-pop">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="area">المساحة</span><span class="data-value" id="c-area" dir="rtl">-</span></div>
+                        <div class="data-item full-width"><span class="data-label" data-i18n="lang">اللغات الرسمية</span><span class="data-value" id="c-lang" style="font-size: 0.8rem;">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="tz">المنطقة الزمنية</span><span class="data-value" id="c-timezone">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="climate">المناخ</span><span class="data-value highlight-text" id="c-climate">-</span></div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h3><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg> <span data-i18n="eco">اقتصاد وبنية تحتية</span></h3>
+                    <div class="grid-data">
+                        <div class="data-item"><span class="data-label" data-i18n="currency">العملة الرسمية</span><span class="data-value" id="c-currency">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="gdp">الناتج المحلي</span><span class="data-value highlight-text" id="c-gdp">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="phone">رمز الاتصال</span><span class="data-value" id="c-phone" dir="ltr">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="tld">نطاق الإنترنت</span><span class="data-value" id="c-tld" dir="ltr">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="driving">اتجاه السير</span><span class="data-value" id="c-driving">-</span></div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h3><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> <span data-i18n="pol">سياسة وسياحة</span></h3>
+                    <div class="grid-data">
+                        <div class="data-item"><span class="data-label" data-i18n="gov">نظام الحكم</span><span class="data-value highlight-text" id="c-gov">-</span></div>
+                        <div class="data-item"><span class="data-label" data-i18n="indep">تاريخ الاستقلال</span><span class="data-value highlight-text" id="c-indep">-</span></div>
+                        <div class="data-item full-width"><span class="data-label" data-i18n="landmark">أشهر معلم سياحي</span><span class="data-value highlight-text" id="c-landmark">-</span></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
