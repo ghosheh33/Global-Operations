@@ -305,3 +305,19 @@ async function fetchCountry(geoData) {
         ui.loading.classList.add('hidden'); ui.error.classList.remove('hidden');
     }
 }
+
+/* =========================================
+   6. Progressive Web App (PWA) - Offline Support
+   ========================================= */
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then((registration) => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch((error) => {
+                console.error('ServiceWorker registration failed: ', error);
+            });
+    });
+}
